@@ -1,4 +1,5 @@
 var fetch = require('node-fetch');
+var temperature = require('./utils/temperature');
 var rwis_surface_url = 'https://mesonet.agron.iastate.edu/data/rwis_sf.txt';
 var rwis_atmos_url = 'https://mesonet.agron.iastate.edu/data/rwis.txt';
 var mongoose = require('mongoose');
@@ -18,9 +19,8 @@ var buildAtmosphericObservation = function (row) {
     var rpuId = row[1];
     var timestamp = row[3];
     var obsKey = JSON.stringify({ rpu_id: rpuId, time: timestamp });
-    //TODO clean up values, convert to Farenheit, average wind direction min/max
     atmosObservations[obsKey] = {
-        air_temp: row[4],
+        air_temp: temperature.rwisTempToFarenheit(row[4]),
         dewpoint: row[5],
         relative_humidity: row[6],
         wind_speed: row[7],
@@ -41,11 +41,11 @@ var buildSurfaceObservations = function (row) {
     var timestamp = row[3];
     var obsKey = JSON.stringify({ rpu_id: rpuId, sensor_id: sensorId, time: timestamp });
     var surfaceCondition = row[4];
-    var surfaceTemp = row[5];
-    var freezeTemp = row[6];
+    var surfaceTemp = temperature.rwisTempToFarenheit(row[5]);
+    var freezeTemp = temperature.rwisTempToFarenheit(row[6]);
     var depth = row[8];
     var icePct = row[9];
-    var subTemp = row[10];
+    var subTemp = temperature.rwisTempToFarenheit(row[10]);
     rwisObservations[obsKey] = new RwisObs({
         surface_condition: surfaceCondition,
         surface_temp: surfaceTemp,
