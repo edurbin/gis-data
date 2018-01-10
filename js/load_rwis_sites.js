@@ -1,5 +1,5 @@
 var fs = require('fs');
-var rwis_sites = './conf/rwis_sensors.csv';
+var rwis_sites = '../conf/rwis_sensors.csv';
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/wxdata');
 var RwisSite = require('./models/rwis_sites');
