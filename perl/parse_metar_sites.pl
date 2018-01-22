@@ -12,6 +12,7 @@ my $db = $client->get_database($database);
 my $metar_collection = $db->get_collection($collection);
 
 sub trim($);
+sub formatLatLon($);
 
 while(<>){
     chomp;
@@ -21,15 +22,15 @@ while(<>){
         $_ = trim($_);
     }
     next if $rec[2] eq "";
-
+    formatLatLon($rec[6]);
     $metar_collection->insert({
 	state => $rec[0],
         sensor_name => $rec[1],
         sensor_id => $rec[2],
         faa_id => $rec[3],
         synoptic_num => $rec[4],
-        lat => $rec[5],
-        lon => $rec[6],
+        lat => formatLatLon($rec[5]),
+        lon => formatLatLon($rec[6]),
         elevation => $rec[7],
     });    
 }
@@ -43,3 +44,14 @@ sub trim($)
     return $string;
 }
 
+sub formatLatLon($)
+{
+    my $latlon = shift;
+    my ($degree, $minute, $direction) = ($latlon =~ m/(\d+)\s+(\d+)(\w)/);
+    $minute = (sprintf "%.2f", ($minute / 60));
+    $minute =~ s/^0\./\./;
+    $latlon = $degree . $minute . "0000";
+    $latlon = "-" . $latlon if $direction =~ m/W|S/;
+    
+    return $latlon;
+}
