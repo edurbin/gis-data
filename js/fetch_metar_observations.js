@@ -204,11 +204,12 @@ var buildObservationData = function (row) {
     }
     return observationData;
 }
-var metarObservations = [];
+var visitedSites = 0;
 MetarSite.find({}, function (err, metarSites) {
     metarSites.map(function (metarSite) {
         var url = metarUrl + metarSite.sensor_id + ".TXT";
         fetch(url).then(function (response) {
+            visitedSites++;
             if (response.status != '404') {
                 return response.text();
             } else {
@@ -219,10 +220,9 @@ MetarSite.find({}, function (err, metarSites) {
             if (data !== undefined) {
                 var rows = data.split("\n");
                 var metarObservation = buildMetarObservation(metarSite, rows);
-                metarObservations.push(metarObservation);
                 metarObservation.save();
             }
-            if (metarObservations.length == metarSites.length - 1) {
+            if (visitedSites == metarSites.length - 1) {
                 mongoose.connection.close();
             }
         });
