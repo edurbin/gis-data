@@ -212,8 +212,6 @@ MetarSite.find({}, function (err, metarSites) {
             visitedSites++;
             if (response.status != '404') {
                 return response.text();
-            } else {
-                metarObservations.push({});
             }
             return;
         }).then(function (data) {
