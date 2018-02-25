@@ -5,7 +5,6 @@ var schema = new Schema({
     timestamp: { type: Date },
     air_temp: { type: Number },
     atmospheric_pressure: { type: Number },
-    surface_cond: { type: String },
     precipitation_intensity: { type: String },
     precipitation_type: { type: String },
     precipitation_rate: { type: Number },
