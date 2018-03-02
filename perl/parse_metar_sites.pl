@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use MongoDB();
-#perl parse_metar_sites.pl ../conf/metar_sensors.txt
+#perl parse_metar_sites.pl ../config/metar_sensors.txt
 my $host = 'localhost';
 my $port = 27017;
 my $database = 'wxdata';
