@@ -1,0 +1,2 @@
+*/15 * * * * /usr/bin/nodejs gis-data/server/fetch_metar_ovservations.js
+*/15 * * * * /usr/bin/nodejs gis-data/server/fetch_rwis_ovservations.js
