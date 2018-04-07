@@ -31,7 +31,8 @@ var buildAtmosphericObservation = function (row) {
         precipitation_type: row[13],
         precipitation_rate: row[14],
         accumulation: row[15],
-        visibility: row[16]
+        visibility: row[16],
+        timestamp: timestamp
     };
 }
 
