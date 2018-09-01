@@ -207,8 +207,7 @@ let buildObservationData = (row) => {
 
 let visitedSites = 0;
 MetarSite.find({}, (err, metarSites) => {
-    metarSites.map(function (metarSite) {
-	    console.log(metarSite);
+    metarSites.map((metarSite) => {
         let url = metarUrl + metarSite.sensor_id + ".TXT";
         fetch(url).then((response) => {
             visitedSites++;
