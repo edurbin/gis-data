@@ -37,7 +37,7 @@ let buildAtmosphericObservation = (row) => {
     };
 }
 
-let buildSurfaceObservations = function (row) {
+let buildSurfaceObservations = (row) => {
     let rpuId = row[1];
     let sensorId = row[2];
     let timestamp = row[3];
