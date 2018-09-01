@@ -1,25 +1,25 @@
-var fetch = require('node-fetch');
-var Visibility = require('../utils/visibility');
-var Wind = require('../utils/wind');
-var Temperature = require('../utils/temperature');
-var metarUrl = 'http://tgftp.nws.noaa.gov/data/observations/metar/stations/';
-var mongoose = require('mongoose');
+"use strict"
+const fetch = require('node-fetch');
+const Visibility = require('../utils/visibility');
+const Wind = require('../utils/wind');
+const Temperature = require('../utils/temperature');
+const metarUrl = 'http://tgftp.nws.noaa.gov/data/observations/metar/stations/';
+const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/wxdata');
-var MetarSite = require('../models/metar_sites');
-var MetarObs = require('../models/metar_obs');
-
-var getWindDirection = function (windSpeedData) {
+const MetarSite = require('../models/metar_sites');
+const MetarObs = require('../models/metar_obs');
+let getWindDirection = (windSpeedData) => {
     return windSpeedData.substr(0, 3);
 }
 
-var getWindSpeed = function (windSpeedData) {
-    var windSpeed = windSpeedData.substr(3, 2);
+let getWindSpeed = (windSpeedData) => {
+    let windSpeed = windSpeedData.substr(3, 2);
     windSpeed = Wind.convertKnotsToMiles(windSpeed);
     return windSpeed;
 }
 
-var getWindGust = function (windSpeedData) {
-    var windGust = 0;
+let getWindGust = (windSpeedData) => {
+    let windGust = 0;
     if (windSpeedData.length > 7) {
         windGust = windSpeedData.substr(6, 2);
         windGust = Wind.convertKnotsToMiles(windGust);
@@ -27,28 +27,28 @@ var getWindGust = function (windSpeedData) {
     return windGust;
 }
 
-var getTemperature = function (tempData) {
-    var firstDigit = tempData.substr(0, 1);
+let getTemperature = (tempData) => {
+    let firstDigit = tempData.substr(0, 1);
     if (firstDigit == "M") {
-        var temp = tempData.substr(1, 2);
+        let temp = tempData.substr(1, 2);
         return "-" + Temperature.celciusTempToFarenheit(temp);
     } else {
-        var temp = tempData.substr(0, 2);
+        let temp = tempData.substr(0, 2);
         return Temperature.celciusTempToFarenheit(temp);
     }
 }
 
-var getDewPoint = function (tempData) {
-    var startIndex = tempData.indexOf("/");
-    var firstDigit = tempData.substr(startIndex, 1);
+let getDewPoint = (tempData) => {
+    let startIndex = tempData.indexOf("/");
+    let firstDigit = tempData.substr(startIndex, 1);
     if (firstDigit == "M") {
-        var dewPoint = tempData.substr((startIndex + 1), 2);
+        let dewPoint = tempData.substr((startIndex + 1), 2);
         dewPoint = Temperature.celciusTempToFarenheit(dewPoint);
         if (!isNaN(dewPoint)) {
             return "-" + dewPoint;
         }
     } else {
-        var dewPoint = tempData.substr((startIndex + 1), 2);
+        let dewPoint = tempData.substr((startIndex + 1), 2);
         dewPoint = Temperature.celciusTempToFarenheit(dewPoint);
         if (!isNaN(dewPoint)) {
             return dewPoint;
@@ -57,9 +57,9 @@ var getDewPoint = function (tempData) {
     return null;
 }
 
-var getPrecipIntensity = function (precipData) {
-    var precipIntensity = null;
-    var intensityValues = {
+let getPrecipIntensity = (precipData) => {
+    let precipIntensity = null;
+    const intensityValues = {
         "-": "Light",
         "+": "Heavy",
         "VC": "Vicinity"
@@ -74,9 +74,9 @@ var getPrecipIntensity = function (precipData) {
     return precipIntensity;
 }
 
-var getDescriptor = function (precipData) {
-    var returnDescriptor;
-    var descriptors = {
+let getDescriptor = (precipData) => {
+    let returnDescriptor;
+    const descriptors = {
         'MI': 'Shallow',
         'PR': 'Partial',
         'BC': 'Patches',
@@ -94,9 +94,9 @@ var getDescriptor = function (precipData) {
     return returnDescriptor;
 }
 
-var getPrecipitation = function (precipData) {
-    var precip;
-    var precipitationTypes = {
+let getPrecipitation = (precipData) => {
+    let precip;
+    const precipitationTypes = {
         'DZ': 'Drizzle',
         'RA': 'Rain',
         'SN': 'Snow',
@@ -116,10 +116,10 @@ var getPrecipitation = function (precipData) {
     return precip;
 }
 
-var getPrecipType = function (precipData) {
-    var precipType = getPrecipitation(precipData);
+let getPrecipType = (precipData) => {
+    let precipType = getPrecipitation(precipData);
     if (precipType !== undefined) {
-        var descriptor = getDescriptor(precipData);
+        let descriptor = getDescriptor(precipData);
         if (descriptor !== undefined) {
             precipType = descriptor + precipType;
         }
@@ -127,24 +127,24 @@ var getPrecipType = function (precipData) {
     return precipType;
 }
 
-var buildMetarObservation = function (metarSite, rows) {
-    var observationDate = new Date(rows[0] + "Z");
-    var observationData = buildObservationData(rows[1]);
-    var windDirection = getWindDirection(observationData[2]);
-    var windSpeed = getWindSpeed(observationData[2]);
-    var windGust = getWindGust(observationData[2]);
-    var visibilityObs = Visibility.convertStatuteMiles(observationData[3]);
+let buildMetarObservation = (metarSite, rows) => {
+    let observationDate = new Date(rows[0] + "Z");
+    let observationData = buildObservationData(rows[1]);
+    let windDirection = getWindDirection(observationData[2]);
+    let windSpeed = getWindSpeed(observationData[2]);
+    let windGust = getWindGust(observationData[2]);
+    let visibilityObs = Visibility.convertStatuteMiles(observationData[3]);
 
-    var tempIdx = findTemperatureIndex(observationData);
-    var temperature = getTemperature(observationData[tempIdx]);
-    var dewpoint = getDewPoint(observationData[tempIdx]);
+    let tempIdx = findTemperatureIndex(observationData);
+    let temperature = getTemperature(observationData[tempIdx]);
+    let dewpoint = getDewPoint(observationData[tempIdx]);
 
-    var conditionIdx = findSkyConditionIndex(observationData, tempIdx);
-    var surfaceCondition = [];
-    var precipitationIntensity;
-    var precipitationType;
-    var precipitationIntensity2;
-    var precipitationType2;
+    let conditionIdx = findSkyConditionIndex(observationData, tempIdx);
+    let surfaceCondition = [];
+    let precipitationIntensity;
+    let precipitationType;
+    let precipitationIntensity2;
+    let precipitationType2;
     if (conditionIdx > 0) {
         if (conditionIdx > 4) {
             precipitationIntensity = getPrecipIntensity(observationData[4]);
@@ -155,11 +155,11 @@ var buildMetarObservation = function (metarSite, rows) {
             }
         }
     }
-    for (var idx = conditionIdx; idx < tempIdx; idx++) {
+    for (let idx = conditionIdx; idx < tempIdx; idx++) {
         surfaceCondition.push(observationData[idx]); //TODO parse sfc condition
     }
 
-    var metarObservation = new MetarObs({
+    let metarObservation = new MetarObs({
         metar_site: metarSite,
         timestamp: observationDate,
         air_temp: temperature,
@@ -177,9 +177,9 @@ var buildMetarObservation = function (metarSite, rows) {
     return metarObservation;
 }
 
-var findTemperatureIndex = function (observationData) {
-    for (var idx = 4; idx < observationData.length; idx++) {
-        var patt = /[M]?\d{2}\/([M]?\d{2})?/;
+let findTemperatureIndex = (observationData) => {
+    for (let idx = 4; idx < observationData.length; idx++) {
+        let patt = /[M]?\d{2}\/([M]?\d{2})?/;
         if (patt.test(observationData[idx])) {
             return idx;
         }
@@ -187,9 +187,9 @@ var findTemperatureIndex = function (observationData) {
     return 6;
 }
 
-var findSkyConditionIndex = function (observationData, tempIdx) {
-    for (var idx = 4; idx < tempIdx; idx++) {
-        var patt = /\w{3}\d{3}(\w+)?|\w{3}|CAVOK/;
+let findSkyConditionIndex = (observationData, tempIdx) => {
+    for (let idx = 4; idx < tempIdx; idx++) {
+        let patt = /\w{3}\d{3}(\w+)?|\w{3}|CAVOK/;
         if (patt.test(observationData[idx])) {
             return idx;
         }
@@ -197,27 +197,28 @@ var findSkyConditionIndex = function (observationData, tempIdx) {
     return -1;
 }
 
-var buildObservationData = function (row) {
-    var observationData = row.split(" ");
+let buildObservationData = (row) => {
+    let observationData = row.split(" ");
     if (observationData[2] == 'AUTO') {
         observationData.splice(1, 2, observationData[1] + " " + observationData[2]);
     }
     return observationData;
 }
-var visitedSites = 0;
+let visitedSites = 0;
 MetarSite.find({}, function (err, metarSites) {
     metarSites.map(function (metarSite) {
-        var url = metarUrl + metarSite.sensor_id + ".TXT";
-        fetch(url).then(function (response) {
+        let url = metarUrl + metarSite.sensor_id + ".TXT";
+        fetch(url).then((response) => {
             visitedSites++;
             if (response.status != '404') {
                 return response.text();
             }
             return;
-        }).then(function (data) {
+        }).then((data) => {
             if (data !== undefined) {
-                var rows = data.split("\n");
-                var metarObservation = buildMetarObservation(metarSite, rows);
+                let rows = data.split("\n");
+                let metarObservation = buildMetarObservation(metarSite, rows);
+                //console.log(metarObservation);
                 metarObservation.save();
             }
             if (visitedSites == metarSites.length - 1) {
@@ -225,5 +226,4 @@ MetarSite.find({}, function (err, metarSites) {
             }
         });
     });
-
 });
