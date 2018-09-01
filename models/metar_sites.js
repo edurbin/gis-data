@@ -5,7 +5,7 @@ var schema = new Schema({
     sensor_name: { type: String },
     sensor_id: { type: String },
     faa_id: { type: String },
-    synoptic_num: { type: Number },
+    synoptic_num: { type: String },
     lat: { type: String },
     lon: { type: String },
     elevation: { type: String }

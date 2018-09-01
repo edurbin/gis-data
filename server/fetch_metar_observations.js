@@ -204,9 +204,11 @@ let buildObservationData = (row) => {
     }
     return observationData;
 }
+
 let visitedSites = 0;
-MetarSite.find({}, function (err, metarSites) {
+MetarSite.find({}, (err, metarSites) => {
     metarSites.map(function (metarSite) {
+	    console.log(metarSite);
         let url = metarUrl + metarSite.sensor_id + ".TXT";
         fetch(url).then((response) => {
             visitedSites++;
@@ -218,7 +220,7 @@ MetarSite.find({}, function (err, metarSites) {
             if (data !== undefined) {
                 let rows = data.split("\n");
                 let metarObservation = buildMetarObservation(metarSite, rows);
-                //console.log(metarObservation);
+                console.log(metarObservation);
                 metarObservation.save();
             }
             if (visitedSites == metarSites.length - 1) {
@@ -227,3 +229,4 @@ MetarSite.find({}, function (err, metarSites) {
         });
     });
 });
+

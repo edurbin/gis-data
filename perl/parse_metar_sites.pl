@@ -6,7 +6,7 @@ use MongoDB();
 my $host = 'localhost';
 my $port = 27017;
 my $database = 'wxdata';
-my $collection = 'MetarSite';
+my $collection = 'metarsites';
 my $client = MongoDB::MongoClient->new(host => $host, port => $port);
 my $db = $client->get_database($database);
 my $metar_collection = $db->get_collection($collection);
