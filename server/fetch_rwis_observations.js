@@ -1,24 +1,25 @@
-var fetch = require('node-fetch');
-var Temperature = require('../utils/temperature');
-var rwis_surface_url = 'https://mesonet.agron.iastate.edu/data/rwis_sf.txt';
-var rwis_atmos_url = 'https://mesonet.agron.iastate.edu/data/rwis.txt';
-var mongoose = require('mongoose');
+"use strict"
+const fetch = require('node-fetch');
+const Temperature = require('../utils/temperature');
+const rwis_surface_url = 'https://mesonet.agron.iastate.edu/data/rwis_sf.txt';
+const rwis_atmos_url = 'https://mesonet.agron.iastate.edu/data/rwis.txt';
+const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/wxdata');
-var RwisSite = require('../models/rwis_sites');
-var RwisObs = require('../models/rwis_obs');
-var CSV = require('csv-string');
-var url_array = [rwis_surface_url, rwis_atmos_url];
-var rwisObservations = {};
-var atmosObservations = {}; //only 1 atmospheric observation per site
-var siteMap = {};
-function isSurfaceData(row) {
+const RwisSite = require('../models/rwis_sites');
+const RwisObs = require('../models/rwis_obs');
+const CSV = require('csv-string');
+const url_array = [rwis_surface_url, rwis_atmos_url];
+let rwisObservations = {};
+let atmosObservations = {}; //only 1 atmospheric observation per site
+let siteMap = {};
+let isSurfaceData = (row) => {
     return row.length == 15 ? true : false;
 }
 
-var buildAtmosphericObservation = function (row) {
-    var rpuId = row[1];
-    var timestamp = row[3];
-    var obsKey = JSON.stringify({ rpu_id: rpuId, time: timestamp });
+let buildAtmosphericObservation = (row) => {
+    let rpuId = row[1];
+    let timestamp = row[3];
+    let obsKey = JSON.stringify({ rpu_id: rpuId, time: timestamp });
     atmosObservations[obsKey] = {
         air_temp: Temperature.rwisTempToFarenheit(row[4]),
         dewpoint: row[5],
@@ -36,17 +37,17 @@ var buildAtmosphericObservation = function (row) {
     };
 }
 
-var buildSurfaceObservations = function (row) {
-    var rpuId = row[1];
-    var sensorId = row[2];
-    var timestamp = row[3];
-    var obsKey = JSON.stringify({ rpu_id: rpuId, sensor_id: sensorId, time: timestamp });
-    var surfaceCondition = row[4];
-    var surfaceTemp = Temperature.rwisTempToFarenheit(row[5]);
-    var freezeTemp = Temperature.rwisTempToFarenheit(row[6]);
-    var depth = row[8];
-    var icePct = row[9];
-    var subTemp = Temperature.rwisTempToFarenheit(row[10]);
+let buildSurfaceObservations = function (row) {
+    let rpuId = row[1];
+    let sensorId = row[2];
+    let timestamp = row[3];
+    let obsKey = JSON.stringify({ rpu_id: rpuId, sensor_id: sensorId, time: timestamp });
+    let surfaceCondition = row[4];
+    let surfaceTemp = Temperature.rwisTempToFarenheit(row[5]);
+    let freezeTemp = Temperature.rwisTempToFarenheit(row[6]);
+    let depth = row[8];
+    let icePct = row[9];
+    let subTemp = Temperature.rwisTempToFarenheit(row[10]);
     rwisObservations[obsKey] = new RwisObs({
         surface_condition: surfaceCondition,
         surface_temp: surfaceTemp,
@@ -58,19 +59,19 @@ var buildSurfaceObservations = function (row) {
 }
 
 
-RwisSite.find({}, function (err, rwisSites) {
-    rwisSites.forEach(function (rwisSite) {
-        var rpuId = rwisSite.rpu_id;
-        var sensorId = rwisSite.sensor_id;
-        var siteKey = JSON.stringify({ rpu_id: rpuId, sensor_id: sensorId });
+RwisSite.find({}, (err, rwisSites) => {
+    rwisSites.forEach((rwisSite) => {
+        let rpuId = rwisSite.rpu_id;
+        let sensorId = rwisSite.sensor_id;
+        let siteKey = JSON.stringify({ rpu_id: rpuId, sensor_id: sensorId });
         siteMap[siteKey] = rwisSite;
     });
 
-    var promises = url_array.map(url => fetch(url).then(response => response.text()));
+    let promises = url_array.map(url => fetch(url).then(response => response.text()));
     Promise.all(promises).then(results => {
-        results.forEach(function (data) {
-            var rows = CSV.parse(data);
-            var firstRow = rows.shift();
+        results.forEach((data) => {
+            let rows = CSV.parse(data);
+            let firstRow = rows.shift();
             rows.forEach(function (row) {
                 if (isSurfaceData(firstRow)) {
                     buildSurfaceObservations(row);
@@ -79,27 +80,27 @@ RwisSite.find({}, function (err, rwisSites) {
                 }
             });
         });
-        var actions = Object.keys(rwisObservations).map(function (key, index) {
-            var rwisObservation = rwisObservations[key];
-            var keyObj = JSON.parse(key);
-            var rpuId = keyObj.rpu_id;
-            var sensorId = keyObj.sensor_id;
-            var timestamp = keyObj.time;
-            var obsKey = JSON.stringify({ rpu_id: rpuId, time: timestamp });
+        let actions = Object.keys(rwisObservations).map((key, index) => {
+            let rwisObservation = rwisObservations[key];
+            let keyObj = JSON.parse(key);
+            let rpuId = keyObj.rpu_id;
+            let sensorId = keyObj.sensor_id;
+            let timestamp = keyObj.time;
+            let obsKey = JSON.stringify({ rpu_id: rpuId, time: timestamp });
             if (atmosObservations[obsKey]) {
                 var atmosphericObservation = atmosObservations[obsKey];
                 Object.keys(atmosphericObservation).forEach(function (atmosKey) {
                     rwisObservation[atmosKey] = atmosphericObservation[atmosKey];
                 });
             }
-            var siteKey = JSON.stringify({ rpu_id: rpuId, sensor_id: sensorId });
-            var rwisSite = siteMap[siteKey];
+            let siteKey = JSON.stringify({ rpu_id: rpuId, sensor_id: sensorId });
+            let rwisSite = siteMap[siteKey];
             rwisObservation.rwis_site = rwisSite;
-            var promise = rwisObservation.save();
+            let promise = rwisObservation.save();
             return promise;
 
         });
-        Promise.all(actions).then(function () {
+        Promise.all(actions).then(() => {
             mongoose.connection.close();
         });
     });
