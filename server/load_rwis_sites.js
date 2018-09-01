@@ -1,26 +1,27 @@
-var fs = require('fs');
-var rwis_sites = '../config/rwis_sensors.csv';
-var mongoose = require('mongoose');
+"use strict"
+const fs = require('fs');
+const rwis_sites = '../config/rwis_sensors.csv';
+const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/wxdata');
-var RwisSite = require('../models/rwis_sites');
-var CSV = require('csv-string');
-var db = mongoose.connection;
+const RwisSite = require('../models/rwis_sites');
+const CSV = require('csv-string');
+const db = mongoose.connection;
 
-var fn = function buildRwisSite(row) {
-    var rpuId = row[0];
-    var sensorName = row[1];
-    var township = row[2];
-    var lat = row[7];
-    var lon = row[8];
-    var altitude = row[9];
-    var county = row[10];
-    var routeName = row[11];
-    var milePost = row[12];
-    var garageName = row[14];
-    var sensorId = row[17];
-    var priority = row[19];
+let fn = (row) => {
+    let rpuId = row[0];
+    let sensorName = row[1];
+    let township = row[2];
+    let lat = row[7];
+    let lon = row[8];
+    let altitude = row[9];
+    let county = row[10];
+    let routeName = row[11];
+    let milePost = row[12];
+    let garageName = row[14];
+    let sensorId = row[17];
+    let priority = row[19];
 
-    var rwisSite = new RwisSite({
+    let rwisSite = new RwisSite({
         rpu_id: rpuId,
         county_name: county,
         mile_post: milePost,
@@ -34,7 +35,7 @@ var fn = function buildRwisSite(row) {
         lat: lat,
         lon: lon
     });
-    var promise = rwisSite.save();
+    let promise = rwisSite.save();
     return promise;
 }
 
@@ -42,8 +43,8 @@ fs.readFile(rwis_sites, 'utf8', function (err, data) {
     if (err) {
         return console.log(err);
     }
-    var csvArr = CSV.parse(data);
-    var actions = csvArr.map(fn);
+    let csvArr = CSV.parse(data);
+    let actions = csvArr.map(fn);
     Promise.all(actions).then(function () {
         mongoose.connection.close();
     });
