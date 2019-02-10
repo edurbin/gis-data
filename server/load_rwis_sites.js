@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 "use strict"
 const fs = require('fs');
 const rwis_sites = '../config/rwis_sensors.csv';
